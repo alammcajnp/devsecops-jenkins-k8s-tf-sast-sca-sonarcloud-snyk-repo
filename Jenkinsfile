@@ -4,10 +4,27 @@ pipeline {
         maven 'maven_3_2_5'  
     }
    stages{
-    stage('CompileandRunSonarAnalysis') {
-            steps {	
-		sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=buggyapp2024 -Dsonar.organization=buggyapp2024 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=deb7eebafc9c18397e13cabb009f71245dc5ed36'
-			}
-        }
+
+
+	stage('Build') { 
+            steps { 
+               withDockerRegistry([credentialsId: "dockerlogin", url: ""]) {
+                 script{
+                 app =  docker.build("asg")
+                 }
+               }
+            }
+    }
+
+	stage('Push') {
+            steps {
+                script{
+                    docker.withRegistry('https://145988340565.dkr.ecr.us-west-2.amazonaws.com', 'ecr:us-west-2:aws-credentials') {
+                    app.push("latest")
+                    }
+                }
+            }
+    	}
+	    
   }
 }
